@@ -787,16 +787,22 @@
           url.searchParams.append(key, value);
         }
         
+        console.log('API Call:', action, params);
+        console.log('Full URL:', url.toString());
+        
         const response = await fetch(url.toString(), {
           method: 'GET',
           redirect: 'follow'
         });
+
+        console.log('Response status:', response.status);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('Response data:', data);
         return data;
 
       } catch (error) {
@@ -879,17 +885,24 @@
     // PRODUCT LOADING
     // ========================================================================
     async function loadProducts() {
+      console.log('Loading products...');
       const response = await callApi('getProducts', {});
+      
+      console.log('Products API response:', response);
       
       if (response.success) {
         allProducts = response.products;
+        console.log('Products loaded:', allProducts.length, 'products');
+        console.log('First product:', allProducts[0]);
         
         // Extract unique categories
         categories = [...new Set(allProducts.map(p => p.category))];
+        console.log('Categories:', categories);
         
         renderCategoryTabs();
         renderProducts();
       } else {
+        console.error('Failed to load products:', response.message);
         document.getElementById('productGrid').innerHTML = 
           '<div class="empty-state"><h3>Error loading products</h3><p>Please refresh the page</p></div>';
       }
@@ -940,7 +953,7 @@
 
       let html = '';
       filteredProducts.forEach(product => {
-        const hasSizes = product.sizes && product.sizes.length > 0;
+        const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
         const sizeSelectId = `size-${product.id}`;
         
         html += `
@@ -954,7 +967,7 @@
                 <div class="size-selector">
                   <label for="${sizeSelectId}">Select Size:</label>
                   <select id="${sizeSelectId}">
-                    ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+                    ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
                   </select>
                 </div>
               ` : ''}
@@ -977,7 +990,7 @@
       if (!product) return;
 
       let selectedSize = '';
-      if (product.sizes && product.sizes.length > 0) {
+      if (product.sizeOptions && product.sizeOptions.length > 0) {
         const sizeSelect = document.getElementById(`size-${productId}`);
         selectedSize = sizeSelect.value;
       }
