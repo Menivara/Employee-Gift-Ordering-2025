@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plews & Edelmann Employee Gift Portal</title>
+  <style>
+    /* Version: 2.0 - AWS Amplify Compatible | Date: 2024-11-13 */
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+    }
+    
+    /* Mobile: Make modal nearly full screen */
+    @media (max-width: 768px) {
+      .modal {
+        width: 95%;
+        max-width: none;
+        padding: 2.5rem 1.5rem;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      .modal h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .modal input {
+        font-size: 1.25rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .modal button {
+        font-size: 1.25rem;
+        padding: 1rem;
+      }
+    }
+
+    .modal h2 {
+      color: #1e3c72;
+      margin-bottom: 1rem;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .modal input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal button {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      min-height: 48px;
+    }
+
+    .modal button:hover {
+      transform: translateY(-2px);
+    }
+
+    .modal button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border: 1px solid #fcc;
+    }
+
+    .success-banner {
+      background: #d4edda;
+      color: #155724;
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 3px solid #c3e6cb;
+    }
+
+    .success-banner h2 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Navigation */
+    .nav {
+      background: #f8f9fa;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #dee2e6;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav button {
+      padding: 0.5rem 1rem;
+      background: white;
+      border: 2px solid #667eea;
+      color: #667eea;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      min-height: 48px;
+    }
+
+    .nav button:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    /* Category Filter */
+    .category-filter {
+      padding: 2rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .category-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .category-btn {
+      padding: 0.75rem 1.5rem;
+      background: white;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      min-height: 48px;
+    }
+
+    .category-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .category-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+    }
+
+    /* Mobile: Full width cards */
+    @media (max-width: 768px) {
+      .product-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1rem;
+      }
+      
+      .product-card {
+        margin: 0;
+      }
+      
+      .product-card img {
+        height: 280px;
+      }
+    }
+
+    /* Tablet: 2-3 columns */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+    .product-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: contain;
+    }
+
+    .product-info {
+      padding: 1.5rem;
+    }
+
+    .product-info h3 {
+      color: #1e3c72;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+    }
+
+    .product-info p {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .size-selector {
+      margin-top: 1rem;
+    }
+
+    .size-selector label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .size-selector select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      min-height: 48px;
+    }
+
+    .add-to-cart-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-top: 1rem;
+      min-height: 48px;
+    }
+
+    .add-to-cart-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Cart Badge */
+    .cart-badge {
+      position: relative;
+      display: inline-block;
+    }
+
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    /* Cart View */
+    .cart-view, .checkout-view {
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .cart-item {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .cart-item-info h3 {
+      color: #1e3c72;
+      margin-bottom: 0.25rem;
+    }
+
+    .cart-item-info p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .remove-btn {
+      padding: 0.5rem 1rem;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      min-height: 48px;
+    }
+
+    .remove-btn:hover {
+      background: #c82333;
+    }
+
+    .cart-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .cart-actions button {
+      flex: 1;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      min-width: 200px;
+      min-height: 48px;
+    }
+
+    .continue-shopping {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .continue-shopping:hover {
+      background: #f8f9fa;
+    }
+
+    .checkout-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .checkout-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Checkout View */
+    .checkout-summary {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .checkout-form {
+      margin-top: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      min-height: 48px;
+    }
+
+    .place-order-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-top: 1rem;
+      min-height: 48px;
+    }
+
+    .place-order-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .place-order-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Utility Classes */
+    .hidden {
+      display: none !important;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #666;
+    }
+
+    .empty-state h2 {
+      color: #1e3c72;
+      margin-bottom: 1rem;
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.75rem;
+      }
+      
+      .header p {
+        font-size: 0.95rem;
+      }
+      
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .nav-left {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .nav button {
+        width: 100%;
+      }
+      
+      .category-buttons {
+        flex-direction: column;
+      }
+      
+      .category-btn {
+        width: 100%;
+      }
+      
+      .cart-actions {
+        flex-direction: column;
+      }
+      
+      .cart-actions button {
+        min-width: 100%;
+      }
+      
+      .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .remove-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal">
+      <h2>Welcome to the Gift Portal</h2>
+      <p>Please enter your 6-digit Employee ID</p>
+      <input type="text" id="employeeIdInput" placeholder="Enter Employee ID" maxlength="6">
+      <div id="loginError" class="error-message hidden"></div>
+      <button onclick="login()">Enter</button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="mainContainer" class="container hidden">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎁 Employee Gift Selection 2025</h1>
+      <p>Thank you for your hard work this year!</p>
+    </div>
+
+    <!-- Success Banner (for existing orders) -->
+    <div id="successBanner" class="success-banner hidden">
+      <h2>✅ You've already selected your gift!</h2>
+      <p id="currentSelection"></p>
+      <button onclick="changeSelection()" style="margin-top: 1rem; padding: 0.75rem 2rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; min-height: 48px;">
+        Change My Selection
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <div id="navigation" class="nav">
+      <div class="nav-left">
+        <span id="employeeName" style="font-weight: 600;"></span>
+      </div>
+      <div class="cart-badge">
+        <button onclick="viewCart()">
+          🛒 Cart
+          <span id="cartCount" class="cart-count hidden">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div id="categoryFilter" class="category-filter">
+      <div class="category-buttons">
+        <button class="category-btn active" onclick="filterCategory('All')">All Gifts</button>
+        <button class="category-btn" onclick="filterCategory('Smart Home')">Smart Home</button>
+        <button class="category-btn" onclick="filterCategory('Garage & Garden')">Garage & Garden</button>
+        <button class="category-btn" onclick="filterCategory('Home')">Home</button>
+        <button class="category-btn" onclick="filterCategory('In the Kitchen')">In the Kitchen</button>
+        <button class="category-btn" onclick="filterCategory('Outerwear')">Outerwear</button>
+        <button class="category-btn" onclick="filterCategory('Sports')">Sports</button>
+        <button class="category-btn" onclick="filterCategory('Electronics')">Electronics</button>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="productGrid" class="product-grid"></div>
+
+    <!-- Cart View -->
+    <div id="cartView" class="cart-view hidden">
+      <h2 style="color: #1e3c72; margin-bottom: 2rem;">Your Cart</h2>
+      <div id="cartItems"></div>
+      <div class="cart-actions">
+        <button class="continue-shopping" onclick="continueShopping()">← Continue Shopping</button>
+        <button class="checkout-btn" onclick="goToCheckout()">Proceed to Checkout →</button>
+      </div>
+    </div>
+
+    <!-- Checkout View -->
+    <div id="checkoutView" class="checkout-view hidden">
+      <h2 style="color: #1e3c72; margin-bottom: 2rem;">Confirm Your Order</h2>
+      <div class="checkout-summary" id="checkoutSummary"></div>
+      <div class="checkout-form">
+        <div class="form-group">
+          <label>Confirm Your Name:</label>
+          <input type="text" id="confirmName" placeholder="Enter your full name">
+        </div>
+        <div id="checkoutError" class="error-message hidden"></div>
+        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    
+    // TODO: Replace with your actual Apps Script deployment URL
+    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbziyDp8kTjAJfeHb_fYGRfii7SCXBA2BieuEZxXLM59f05h6feZsE3SnFoRjC_PYjrL/exec';
+    // Example: 'https://script.google.com/macros/s/AKfycbw.../exec'
+    
+    // ============================================
+    // STATE
+    // ============================================
+    
+    let currentEmployee = null;
+    let allProducts = [];
+    let filteredProducts = [];
+    let cart = [];
+    let selectedCategory = 'All';
+
+    // ============================================
+    // API FUNCTIONS
+    // ============================================
+
+    /**
+     * Call the backend API
+     */
+    async function callApi(action, params = {}) {
+      try {
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: action,
+            ...params
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+
+      } catch (error) {
+        console.error('API call failed:', error);
+        return {
+          success: false,
+          message: 'Network error: ' + error.message
+        };
+      }
+    }
+
+    // ============================================
+    // LOGIN
+    // ============================================
+
+    async function login() {
+      const employeeId = document.getElementById('employeeIdInput').value.trim();
+      const errorDiv = document.getElementById('loginError');
+      
+      if (!employeeId || employeeId.length !== 6) {
+        errorDiv.textContent = 'Please enter a valid 6-digit Employee ID';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      const loginBtn = document.querySelector('#loginModal button');
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Validating...';
+      errorDiv.classList.add('hidden');
+
+      const result = await callApi('validateEmployee', { employeeId });
+
+      if (result.success) {
+        currentEmployee = result.employee;
+        
+        // Hide login modal, show main container
+        document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('mainContainer').classList.remove('hidden');
+        document.getElementById('employeeName').textContent = `Welcome, ${currentEmployee.name}!`;
+
+        // Check if employee has existing order
+        if (result.existingOrder) {
+          showExistingOrder(result.existingOrder);
+        } else {
+          // Load products
+          await loadProducts();
+        }
+      } else {
+        errorDiv.textContent = result.message || 'Invalid Employee ID';
+        errorDiv.classList.remove('hidden');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Enter';
+      }
+    }
+
+    // Handle Enter key in login input
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('employeeIdInput');
+      if (input) {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            login();
+          }
+        });
+      }
+    });
+
+    // ============================================
+    // EXISTING ORDER
+    // ============================================
+
+    function showExistingOrder(order) {
+      const banner = document.getElementById('successBanner');
+      const selectionText = document.getElementById('currentSelection');
+      
+      let text = `You selected: ${order.productName}`;
+      if (order.selectedSize) {
+        text += ` (Size: ${order.selectedSize})`;
+      }
+      
+      selectionText.textContent = text;
+      banner.classList.remove('hidden');
+      
+      // Hide category filter and product grid initially
+      document.getElementById('categoryFilter').classList.add('hidden');
+      document.getElementById('productGrid').classList.add('hidden');
+    }
+
+    async function changeSelection() {
+      // Hide success banner
+      document.getElementById('successBanner').classList.add('hidden');
+      
+      // Show category filter and product grid
+      document.getElementById('categoryFilter').classList.remove('hidden');
+      document.getElementById('productGrid').classList.remove('hidden');
+      
+      // Load products if not already loaded
+      if (allProducts.length === 0) {
+        await loadProducts();
+      } else {
+        renderProducts();
+      }
+    }
+
+    // ============================================
+    // PRODUCTS
+    // ============================================
+
+    async function loadProducts() {
+      const result = await callApi('getProducts', {});
+
+      if (result.success) {
+        allProducts = result.products;
+        filteredProducts = allProducts;
+        renderProducts();
+      } else {
+        alert('Error loading products: ' + result.message);
+      }
+    }
+
+    function filterCategory(category) {
+      selectedCategory = category;
+      
+      // Update button states
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // Filter products
+      if (category === 'All') {
+        filteredProducts = allProducts;
+      } else {
+        filteredProducts = allProducts.filter(p => p.category === category);
+      }
+      
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      
+      if (filteredProducts.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><h2>No products in this category</h2><p>Try selecting a different category</p></div>';
+        return;
+      }
+      
+      grid.innerHTML = filteredProducts.map(product => `
+        <div class="product-card">
+          <img src="${product.imageUrl}" alt="${product.name}">
+          <div class="product-info">
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            ${product.sizes && product.sizes.length > 0 ? `
+              <div class="size-selector">
+                <label>Select Size:</label>
+                <select id="size-${product.id}">
+                  ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+                </select>
+              </div>
+            ` : ''}
+            <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // CART
+    // ============================================
+
+    function addToCart(productId) {
+      const product = allProducts.find(p => p.id === productId);
+      if (!product) return;
+      
+      // Check if product has sizes
+      let selectedSize = '';
+      if (product.sizes && product.sizes.length > 0) {
+        const sizeSelect = document.getElementById(`size-${productId}`);
+        selectedSize = sizeSelect.value;
+      }
+      
+      // Only allow one item in cart
+      cart = [{
+        product: product,
+        selectedSize: selectedSize
+      }];
+      
+      updateCartBadge();
+      
+      // Show confirmation
+      alert(`${product.name} added to cart!`);
+    }
+
+    function updateCartBadge() {
+      const badge = document.getElementById('cartCount');
+      if (cart.length > 0) {
+        badge.textContent = cart.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function viewCart() {
+      if (cart.length === 0) {
+        alert('Your cart is empty');
+        return;
+      }
+      
+      // Hide other views
+      document.getElementById('categoryFilter').classList.add('hidden');
+      document.getElementById('productGrid').classList.add('hidden');
+      document.getElementById('checkoutView').classList.add('hidden');
+      
+      // Show cart view
+      document.getElementById('cartView').classList.remove('hidden');
+      
+      // Render cart items
+      const cartItemsDiv = document.getElementById('cartItems');
+      cartItemsDiv.innerHTML = cart.map((item, index) => `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <h3>${item.product.name}</h3>
+            <p>${item.product.description}</p>
+            ${item.selectedSize ? `<p><strong>Size:</strong> ${item.selectedSize}</p>` : ''}
+          </div>
+          <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCartBadge();
+      
+      if (cart.length === 0) {
+        continueShopping();
+      } else {
+        viewCart();
+      }
+    }
+
+    function continueShopping() {
+      document.getElementById('cartView').classList.add('hidden');
+      document.getElementById('categoryFilter').classList.remove('hidden');
+      document.getElementById('productGrid').classList.remove('hidden');
+    }
+
+    // ============================================
+    // CHECKOUT
+    // ============================================
+
+    function goToCheckout() {
+      if (cart.length === 0) return;
+
+      document.getElementById('cartView').classList.add('hidden');
+      document.getElementById('checkoutView').classList.remove('hidden');
+      
+      // Reset button state
+      const placeOrderBtn = document.querySelector('.place-order-btn');
+      if (placeOrderBtn) {
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Place Order';
+      }
+      
+      // Clear any error messages
+      const errorDiv = document.getElementById('checkoutError');
+      if (errorDiv) {
+        errorDiv.classList.add('hidden');
+        errorDiv.textContent = '';
+      }
+      
+      // Pre-fill employee name
+      document.getElementById('confirmName').value = currentEmployee.name;
+      
+      // Render checkout summary
+      const summaryDiv = document.getElementById('checkoutSummary');
+      const item = cart[0];
+      summaryDiv.innerHTML = `
+        <div class="summary-item">
+          <span>Product:</span>
+          <strong>${item.product.name}</strong>
+        </div>
+        ${item.selectedSize ? `
+          <div class="summary-item">
+            <span>Size:</span>
+            <strong>${item.selectedSize}</strong>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    async function placeOrder() {
+      const confirmName = document.getElementById('confirmName').value.trim();
+      const errorDiv = document.getElementById('checkoutError');
+      
+      if (!confirmName) {
+        errorDiv.textContent = 'Please confirm your name';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      if (cart.length === 0) {
+        errorDiv.textContent = 'Your cart is empty';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      const placeOrderBtn = document.querySelector('.place-order-btn');
+      placeOrderBtn.disabled = true;
+      placeOrderBtn.textContent = 'Placing Order...';
+      errorDiv.classList.add('hidden');
+
+      const item = cart[0];
+      
+      const result = await callApi('submitOrder', {
+        employeeId: currentEmployee.id,
+        productId: item.product.id,
+        selectedSize: item.selectedSize || ''
+      });
+
+      if (result.success) {
+        // Clear cart
+        cart = [];
+        updateCartBadge();
+        
+        // Show success message
+        alert('✅ ' + result.message);
+        
+        // Show the order in the success banner
+        showExistingOrder(result.order);
+        
+        // Hide checkout view
+        document.getElementById('checkoutView').classList.add('hidden');
+        
+      } else {
+        errorDiv.textContent = result.message || 'Error placing order';
+        errorDiv.classList.remove('hidden');
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Place Order';
+      }
+    }
+  </script>
+</body>
+</html>
