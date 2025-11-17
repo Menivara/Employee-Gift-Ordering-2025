@@ -250,33 +250,35 @@
       height: 50px;
     }
 
-    .product-description {
-      color: #666;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 1rem;
-      height: 150px;
-      overflow: hidden;
-      position: relative;
-    }
+    Absolutely. We need to check if each description actually overflows before showing the button. Here's the refined approach:
+CSS changes (same as before):
+css.product-description {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  height: 150px;
+  overflow: hidden;
+  position: relative;
+}
 
-    .product-description.expanded {
-      height: auto;
-    }
-    
-    .read-more-btn {
-      color: #3498db;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 600;
-      text-decoration: underline;
-      margin-top: 0.5rem;
-      display: inline-block;
-    }
-    
-    .read-more-btn:hover {
-      color: #2980b9;
-    }
+.product-description.expanded {
+  height: auto;
+}
+
+.read-more-btn {
+  color: #3498db;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-top: 0.5rem;
+  display: inline-block;
+}
+
+.read-more-btn:hover {
+  color: #2980b9;
+}
     
         .size-selector {
           margin-bottom: 1rem;
@@ -978,48 +980,51 @@
     // ========================================================================
     // PRODUCT RENDERING
     // ========================================================================
-    function renderProducts() {
-      const productGrid = document.getElementById('productGrid');
-      const filteredProducts = currentCategory === 'all' 
-        ? allProducts 
-        : allProducts.filter(p => p.category === currentCategory);
+   function renderProducts() {
+  const productGrid = document.getElementById('productGrid');
+  const filteredProducts = currentCategory === 'all' 
+    ? allProducts 
+    : allProducts.filter(p => p.category === currentCategory);
 
-      if (filteredProducts.length === 0) {
-        productGrid.innerHTML = '<div class="empty-state"><h3>No products in this category</h3></div>';
-        return;
-      }
+  if (filteredProducts.length === 0) {
+    productGrid.innerHTML = '<div class="empty-state"><h3>No products in this category</h3></div>';
+    return;
+  }
 
-      let html = '';
-      filteredProducts.forEach(product => {
-        const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
-        const sizeSelectId = `size-${product.id}`;
-        
-        html += `
-          <div class="product-card">
-            <img src="${product.imageUrl}" alt="${product.name}" class="product-image" 
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22220%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22280%22 height=%22220%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E'">
-            <div class="product-info">
-              <div class="product-name">${product.name}</div>
-              <div id="desc-${product.id}" class="product-description">${product.description}</div>
-              <span id="toggle-${product.id}" class="read-more-btn" onclick="toggleDescription('${product.id}')">Read more</span>
-              ${hasSizes ? `
-                <div class="size-selector">
-                  <label for="${sizeSelectId}">Select Size:</label>
-                  <select id="${sizeSelectId}">
-                    ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
-                  </select>
-                </div>
-              ` : ''}
-              <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
-                Add to Cart
-              </button>
+  let html = '';
+  filteredProducts.forEach(product => {
+    const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
+    const sizeSelectId = `size-${product.id}`;
+    
+    html += `
+      <div class="product-card">
+        <img src="${product.imageUrl}" alt="${product.name}" class="product-image" 
+             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22220%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22280%22 height=%22220%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+        <div class="product-info">
+          <div class="product-name">${product.name}</div>
+          <div id="desc-${product.id}" class="product-description">${product.description}</div>
+          <span id="toggle-${product.id}" class="read-more-btn hidden" onclick="toggleDescription('${product.id}')">Read more</span>
+          ${hasSizes ? `
+            <div class="size-selector">
+              <label for="${sizeSelectId}">Select Size:</label>
+              <select id="${sizeSelectId}">
+                ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
+              </select>
             </div>
-          </div>
-        `;
-      });
+          ` : ''}
+          <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    `;
+  });
 
-      productGrid.innerHTML = html;
-    }
+  productGrid.innerHTML = html;
+  
+  // Check which descriptions need the "Read more" button
+  checkDescriptionOverflow();
+}
 
     // ========================================================================
     // CART MANAGEMENT
@@ -1301,6 +1306,34 @@
         btn.textContent = 'Read less';
       }
     } 
+
+    function checkDescriptionOverflow() {
+  allProducts.forEach(product => {
+    const descElement = document.getElementById(`desc-${product.id}`);
+    const toggleBtn = document.getElementById(`toggle-${product.id}`);
+    
+    if (descElement && toggleBtn) {
+      // Check if content overflows the 150px height
+      if (descElement.scrollHeight > 150) {
+        toggleBtn.classList.remove('hidden');
+      }
+    }
+  });
+}
+
+function toggleDescription(productId) {
+  const desc = document.getElementById(`desc-${productId}`);
+  const btn = document.getElementById(`toggle-${productId}`);
+  
+  if (desc.classList.contains('expanded')) {
+    desc.classList.remove('expanded');
+    btn.textContent = 'Read more';
+  } else {
+    desc.classList.add('expanded');
+    btn.textContent = 'Read less';
+  }
+}
+    
   </script>
 </body>
 </html>
