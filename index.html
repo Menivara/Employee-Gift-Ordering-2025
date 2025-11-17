@@ -6,10 +6,16 @@
   <title>Employee Gift Portal - Plews & Edelmann</title>
   <!--
     Employee Gift Portal Frontend - AWS Amplify Version
-    Version: 2.1.6 - 2024-11-13
+    Version: 2.1.7 - 2024-11-17
     
     DEPLOYMENT: Host on AWS Amplify as static site
     Update API_BASE_URL with your Apps Script deployment URL
+    
+    CHANGELOG:
+    - Added expandable descriptions with "Read more" toggle
+    - Improved visual consistency of product cards
+    - Added fade effect for truncated descriptions
+    - Fixed spacing and layout issues
   -->
   <style>
     * {
@@ -222,6 +228,8 @@
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       transition: transform 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
     }
 
     .product-card:hover {
@@ -233,13 +241,15 @@
       width: 100%;
       height: 220px;
       padding-top: 10px;
-      height: 220px;
       object-fit: contain;
       background: #ffffff;
     }
 
     .product-info {
       padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
 
     .product-name {
@@ -247,47 +257,68 @@
       font-weight: bold;
       color: #2c3e50;
       margin-bottom: 0.5rem;
-      height: 50px;
+      min-height: 50px;
+      line-height: 1.3;
     }
 
-.product-description {
-  color: #666;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-  height: 150px;
-  overflow: hidden;
-  position: relative;
-}
+    .product-description-wrapper {
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
 
-.product-description.expanded {
-  height: auto;
-}
+    .product-description {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      height: 150px;
+      overflow: hidden;
+      position: relative;
+    }
 
-.read-more-btn {
-  color: #3498db;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: underline;
-  margin-top: 0.5rem;
-  display: inline-block;
-}
+    .product-description.expanded {
+      height: auto;
+    }
 
-.read-more-btn:hover {
-  color: #2980b9;
-}
-    
-        .size-selector {
-          margin-bottom: 1rem;
-        }
-    
-        .size-selector label {
-          display: block;
-          margin-bottom: 0.5rem;
-          font-weight: 600;
-          color: #333;
-        }
+    /* Fade effect for truncated text */
+    .product-description:not(.expanded)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+      pointer-events: none;
+    }
+
+    .read-more-btn {
+      color: #3498db;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .read-more-btn:hover {
+      color: #2980b9;
+      text-decoration: underline;
+    }
+
+    .size-selector {
+      margin-bottom: 1rem;
+      margin-top: auto;
+    }
+
+    .size-selector label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
 
     .size-selector select {
       width: 100%;
@@ -727,7 +758,7 @@
       <p style="margin-top: 1.5rem; font-size: 0.9rem;">
         For assistance, reach out at<br>
         <strong>hr@plews.com</strong><br><br>
-        Version 2.1.6 - AWS Amplify
+        Version 2.1.7 - AWS Amplify
       </p>
     </div>
   </div>
@@ -978,51 +1009,83 @@
     // ========================================================================
     // PRODUCT RENDERING
     // ========================================================================
-   function renderProducts() {
-  const productGrid = document.getElementById('productGrid');
-  const filteredProducts = currentCategory === 'all' 
-    ? allProducts 
-    : allProducts.filter(p => p.category === currentCategory);
+    function renderProducts() {
+      const productGrid = document.getElementById('productGrid');
+      const filteredProducts = currentCategory === 'all' 
+        ? allProducts 
+        : allProducts.filter(p => p.category === currentCategory);
 
-  if (filteredProducts.length === 0) {
-    productGrid.innerHTML = '<div class="empty-state"><h3>No products in this category</h3></div>';
-    return;
-  }
+      if (filteredProducts.length === 0) {
+        productGrid.innerHTML = '<div class="empty-state"><h3>No products in this category</h3></div>';
+        return;
+      }
 
-  let html = '';
-  filteredProducts.forEach(product => {
-    const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
-    const sizeSelectId = `size-${product.id}`;
-    
-    html += `
-      <div class="product-card">
-        <img src="${product.imageUrl}" alt="${product.name}" class="product-image" 
-             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22220%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22280%22 height=%22220%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E'">
-        <div class="product-info">
-          <div class="product-name">${product.name}</div>
-          <div id="desc-${product.id}" class="product-description">${product.description}</div>
-          <span id="toggle-${product.id}" class="read-more-btn hidden" onclick="toggleDescription('${product.id}')">Read more</span>
-          ${hasSizes ? `
-            <div class="size-selector">
-              <label for="${sizeSelectId}">Select Size:</label>
-              <select id="${sizeSelectId}">
-                ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
-              </select>
+      let html = '';
+      filteredProducts.forEach(product => {
+        const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
+        const sizeSelectId = `size-${product.id}`;
+        
+        html += `
+          <div class="product-card">
+            <img src="${product.imageUrl}" alt="${product.name}" class="product-image" 
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22220%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22280%22 height=%22220%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+            <div class="product-info">
+              <div class="product-name">${product.name}</div>
+              <div class="product-description-wrapper">
+                <div id="desc-${product.id}" class="product-description">${product.description}</div>
+              </div>
+              <button id="toggle-${product.id}" class="read-more-btn hidden" onclick="toggleDescription('${product.id}')">Read more</button>
+              ${hasSizes ? `
+                <div class="size-selector">
+                  <label for="${sizeSelectId}">Select Size:</label>
+                  <select id="${sizeSelectId}">
+                    ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
+                  </select>
+                </div>
+              ` : '<div style="flex: 1;"></div>'}
+              <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+                Add to Cart
+              </button>
             </div>
-          ` : ''}
-          <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
-            Add to Cart
-          </button>
-        </div>
-      </div>
-    `;
-  });
+          </div>
+        `;
+      });
 
-  productGrid.innerHTML = html;
-  
-  // Check which descriptions need the "Read more" button
-  checkDescriptionOverflow();
-}
+      productGrid.innerHTML = html;
+      
+      // Check which descriptions need the "Read more" button
+      checkDescriptionOverflow();
+    }
+
+    // ========================================================================
+    // DESCRIPTION EXPANSION
+    // ========================================================================
+    function checkDescriptionOverflow() {
+      allProducts.forEach(product => {
+        const descElement = document.getElementById(`desc-${product.id}`);
+        const toggleBtn = document.getElementById(`toggle-${product.id}`);
+        
+        if (descElement && toggleBtn) {
+          // Check if content overflows the 150px height
+          if (descElement.scrollHeight > 150) {
+            toggleBtn.classList.remove('hidden');
+          }
+        }
+      });
+    }
+
+    function toggleDescription(productId) {
+      const desc = document.getElementById(`desc-${productId}`);
+      const btn = document.getElementById(`toggle-${productId}`);
+      
+      if (desc.classList.contains('expanded')) {
+        desc.classList.remove('expanded');
+        btn.textContent = 'Read more';
+      } else {
+        desc.classList.add('expanded');
+        btn.textContent = 'Read less';
+      }
+    }
 
     // ========================================================================
     // CART MANAGEMENT
@@ -1288,50 +1351,6 @@
       document.getElementById('productGrid').classList.remove('hidden');
       loadProducts();
     }
-
-    
-    //Fuction to Add Extended Description Option
-    //------------------------------------------------
-   function toggleDescription(productId) {
-      const desc = document.getElementById(`desc-${productId}`);
-      const btn = document.getElementById(`toggle-${productId}`);
-      
-      if (desc.classList.contains('expanded')) {
-        desc.classList.remove('expanded');
-        btn.textContent = 'Read more';
-      } else {
-        desc.classList.add('expanded');
-        btn.textContent = 'Read less';
-      }
-    } 
-
-    function checkDescriptionOverflow() {
-  allProducts.forEach(product => {
-    const descElement = document.getElementById(`desc-${product.id}`);
-    const toggleBtn = document.getElementById(`toggle-${product.id}`);
-    
-    if (descElement && toggleBtn) {
-      // Check if content overflows the 150px height
-      if (descElement.scrollHeight > 150) {
-        toggleBtn.classList.remove('hidden');
-      }
-    }
-  });
-}
-
-function toggleDescription(productId) {
-  const desc = document.getElementById(`desc-${productId}`);
-  const btn = document.getElementById(`toggle-${productId}`);
-  
-  if (desc.classList.contains('expanded')) {
-    desc.classList.remove('expanded');
-    btn.textContent = 'Read more';
-  } else {
-    desc.classList.add('expanded');
-    btn.textContent = 'Read less';
-  }
-}
-    
   </script>
 </body>
 </html>
