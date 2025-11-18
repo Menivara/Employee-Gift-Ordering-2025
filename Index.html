@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Gift Portal - Plews & Edelmann</title>
+  <!--
+    Employee Gift Portal Frontend - AWS Amplify Version
+    Version: 2.1.8 - 2024-11-17
+    
+    DEPLOYMENT: Host on AWS Amplify as static site
+    Update API_BASE_URL with your Apps Script deployment URL
+    
+    CHANGELOG:
+    - Added expandable descriptions with "Read more" toggle
+    - Improved visual consistency of product cards
+    - Added fade effect for truncated descriptions
+    - Fixed spacing and layout issues
+    - Made gradient background fixed/sticky
+  -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5c7c7 0%, #b4e5cc 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Header */
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+    }
+
+    .cart-icon {
+      position: relative;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: transform 0.2s;
+    }
+
+    .cart-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .cart-count {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: #cccccc;
+      padding: 3rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-logo {
+      max-width: 250px;
+      height: auto;
+      margin: 0 auto 1.5rem;
+      display: block;
+    }
+
+    .modal h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+    }
+
+    .modal p {
+      color: #555;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .modal input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .modal button {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+      min-height: 48px;
+    }
+
+    .modal button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .modal button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .hero h2 {
+      color: #2c3e50;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p {
+      color: #555;
+      font-size: 1.1rem;
+    }
+
+    /* Category Tabs */
+    .category-tabs {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .category-tab {
+      padding: 0.75rem 1.5rem;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      font-size: 0.95rem;
+      min-height: 48px;
+    }
+
+    .category-tab:hover {
+      border-color: #3498db;
+      color: #3498db;
+    }
+
+    .category-tab.active {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 220px;
+      padding-top: 10px;
+      object-fit: contain;
+      background: #ffffff;
+    }
+
+    .product-info {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .product-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+      min-height: 50px;
+      line-height: 1.3;
+    }
+
+    .product-description-wrapper {
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-description {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      height: 165px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .product-description.expanded {
+      height: auto;
+    }
+
+    /* Fade effect for truncated text */
+    .product-description:not(.expanded)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+      pointer-events: none;
+    }
+
+    .read-more-btn {
+      color: #3498db;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .read-more-btn:hover {
+      color: #2980b9;
+      text-decoration: underline;
+    }
+
+    .size-selector {
+      margin-bottom: 1rem;
+      margin-top: auto;
+    }
+
+    .size-selector label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .size-selector select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      min-height: 48px;
+    }
+
+    .add-to-cart-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      min-height: 48px;
+    }
+
+    .add-to-cart-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Cart View */
+    .cart-view {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .cart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .cart-header h2 {
+      color: #2c3e50;
+    }
+
+    .cart-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .cart-item-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .cart-item-info {
+      flex: 1;
+    }
+
+    .cart-item-name {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 0.25rem;
+    }
+
+    .cart-item-size {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .cart-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .back-btn {
+      padding: 0.75rem 1.5rem;
+      background: white;
+      color: #3498db;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      min-height: 48px;
+    }
+
+    .back-btn:hover {
+      background: #3498db;
+      color: white;
+    }
+
+    .remove-btn {
+      padding: 0.5rem 1rem;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      min-height: 48px;
+    }
+
+    .remove-btn:hover {
+      background: #c0392b;
+    }
+
+    .checkout-btn {
+      flex: 1;
+      padding: 1rem;
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      min-height: 48px;
+    }
+
+    .checkout-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Checkout View */
+    .checkout-view {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .checkout-header h2 {
+      color: #2c3e50;
+      margin-bottom: 2rem;
+    }
+
+    .order-summary {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .order-summary h3 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .form-group {
+      margin-bottom: 2rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      min-height: 48px;
+    }
+
+    .place-order-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin-bottom: 1rem;
+      min-height: 48px;
+    }
+
+    .place-order-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .place-order-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Order Confirmation */
+    .order-confirmation {
+      background: white;
+      padding: 3rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: #27ae60;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      margin: 0 auto 2rem;
+    }
+
+    .order-confirmation h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    .order-confirmation p {
+      color: #555;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    .order-details {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .modify-order-btn {
+      padding: 1rem 2rem;
+      background: white;
+      color: #3498db;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s;
+      min-height: 48px;
+    }
+
+    .modify-order-btn:hover {
+      background: #3498db;
+      color: white;
+    }
+
+    /* Utility Classes */
+    .hidden {
+      display: none !important;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+
+    .empty-state h3 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      border: 1px solid #fcc;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .modal {
+        width: 95%;
+        max-width: none;
+        padding: 2.5rem 1.5rem;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      .modal-logo {
+        max-width: 150px;
+        margin-bottom: 1.5rem;
+      }
+      
+      .modal h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .modal input {
+        font-size: 1.25rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .modal button {
+        font-size: 1.25rem;
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 1rem;
+      }
+
+      .hero {
+        padding: 1.5rem;
+      }
+
+      .hero h2 {
+        font-size: 1.5rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .product-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .product-image {
+        height: 280px;
+      }
+
+      .category-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .category-tab {
+        width: 100%;
+        text-align: center;
+      }
+
+      .cart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .cart-item-image {
+        width: 100%;
+        height: 200px;
+        margin-bottom: 1rem;
+      }
+      
+      .header h1 {
+        font-size: 1.1rem;
+      }
+      
+      .checkout-view,
+      .order-confirmation {
+        padding: 1.5rem;
+      }
+      
+      .form-group input {
+        font-size: 1rem;
+      }
+    }
+    
+    /* Tablet - 2-3 columns */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+      }
+      
+      .modal {
+        width: 80%;
+      }
+    }
+    
+    /* Large tablets/small desktops - 3 columns */
+    @media (min-width: 1025px) and (max-width: 1280px) {
+      .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal-overlay">
+    <div class="modal">
+      <img src="/images/logo.png" alt="Plews & Edelmann Logo" class="modal-logo">
+      <h2> Gift Portal</h2>
+      <p>Please enter your 6-digit Employee/Associate ID <br>to begin shopping</p>
+      <input 
+        type="text" 
+        id="employeeIdInput" 
+        placeholder="Enter Employee/Associate ID"
+        maxlength="6"
+        pattern="[0-9]*"
+      >
+      <button id="loginBtn" onclick="handleLogin()">Enter</button>
+      <div id="loginError" class="error-message hidden"></div>
+      <p style="margin-top: 1.5rem; font-size: 0.9rem;">
+        For assistance, reach out at<br>
+        <strong><a href="mailto:hr@plews.com">hr@plews.com</a></strong><br><br>
+        Version 2.1.8 - AWS Amplify
+      </p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div id="mainContent" class="hidden">
+    <div class="header">
+      <h1>🎁 2025 Employee Gift Portal - Plews & Edelmann</h1>
+      <div class="cart-icon" onclick="viewCart()">
+        🛒
+        <span id="cartCount" class="cart-count hidden">0</span>
+      </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="container">
+      <div id="heroSection" class="hero">
+        <h2>Happy Holidays!</h2>
+        <p id="welcomeMessage">Welcome! Please pick a gift below and ENJOY!</p>
+      </div>
+
+      <!-- Category Tabs -->
+      <div id="categoryTabs" class="category-tabs"></div>
+
+      <!-- Product Grid -->
+      <div id="productGrid" class="product-grid"></div>
+
+      <!-- Cart View -->
+      <div id="cartView" class="cart-view hidden">
+        <div class="cart-header">
+          <h2>Your Selection</h2>
+          <button class="back-btn" onclick="backToCatalog()">← Back to Catalog</button>
+        </div>
+        <div id="cartItems"></div>
+        <div class="cart-actions">
+          <button class="checkout-btn" onclick="goToCheckout()">Continue to Checkout</button>
+        </div>
+      </div>
+
+      <!-- Checkout View -->
+      <div id="checkoutView" class="checkout-view hidden">
+        <div class="checkout-header">
+          <h2>Confirm Your Order</h2>
+        </div>
+        <div class="order-summary">
+          <h3>Order Summary</h3>
+          <div id="checkoutSummary"></div>
+        </div>
+        <div class="form-group">
+          <label for="confirmName">Confirm Your Name</label>
+          <input type="text" id="confirmName" placeholder="Enter your full name">
+        </div>
+        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+        <div id="checkoutError" class="error-message hidden"></div>
+        <div style="text-align: center; margin-top: 1rem;">
+          <button class="back-btn" onclick="backToCart()">← Back to Cart</button>
+        </div>
+      </div>
+
+      <!-- Order Confirmation -->
+      <div id="confirmationView" class="order-confirmation hidden">
+        <div class="success-icon">✓</div>
+        <h2>Order Placed Successfully!</h2>
+        <p id="confirmationMessage"></p>
+        <div id="confirmationDetails" class="order-details"></div>
+        <button class="modify-order-btn" onclick="modifyOrder()">Change My Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // ========================================================================
+    // API CONFIGURATION
+    // ========================================================================
+    
+    // TODO: Replace with your actual Apps Script deployment URL
+    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbziyDp8kTjAJfeHb_fYGRfii7SCXBA2BieuEZxXLM59f05h6feZsE3SnFoRjC_PYjrL/exec';
+    // Example: 'https://script.google.com/macros/s/AKfycbw.../exec'
+
+    // ========================================================================
+    // API HELPER FUNCTION
+    // ========================================================================
+    
+    /**
+     * Call the backend API using GET to avoid CORS preflight
+     */
+    async function callApi(action, params = {}) {
+      try {
+        // Build URL with parameters
+        const url = new URL(API_BASE_URL);
+        url.searchParams.append('action', action);
+        
+        // Add all params as query parameters
+        for (const [key, value] of Object.entries(params)) {
+          url.searchParams.append(key, value);
+        }
+        
+        console.log('API Call:', action, params);
+        console.log('Full URL:', url.toString());
+        
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          redirect: 'follow'
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+        return data;
+
+      } catch (error) {
+        console.error('API call failed:', error);
+        return {
+          success: false,
+          message: 'Network error: ' + error.message
+        };
+      }
+    }
+
+    // ========================================================================
+    // GLOBAL STATE
+    // ========================================================================
+    let currentEmployee = null;
+    let allProducts = [];
+    let categories = [];
+    let currentCategory = 'all';
+    let cart = [];
+
+    // ========================================================================
+    // LOGIN HANDLING
+    // ========================================================================
+    async function handleLogin() {
+      const employeeId = document.getElementById('employeeIdInput').value.trim();
+      const loginBtn = document.getElementById('loginBtn');
+      const errorDiv = document.getElementById('loginError');
+
+      if (employeeId.length !== 6 || !/^\d+$/.test(employeeId)) {
+        errorDiv.textContent = 'Please enter a valid 6-digit employee ID';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Validating...';
+      errorDiv.classList.add('hidden');
+
+      const response = await callApi('validateEmployee', { employeeId });
+      
+      if (response.success) {
+        currentEmployee = response.employee;
+        document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        
+        // Update welcome message
+        document.getElementById('welcomeMessage').textContent = 
+          `Welcome, ${currentEmployee.name}! Please pick a gift below and ENJOY!`;
+
+        // If employee has existing order, show it
+        if (response.existingOrder) {
+          currentEmployee.hasOrdered = true;
+          currentEmployee.existingOrder = {
+            productId: response.existingOrder.productId,
+            productName: response.existingOrder.productName,
+            selectedOptions: response.existingOrder.selectedSize
+          };
+          showExistingOrder();
+        } else {
+          loadProducts();
+        }
+      } else {
+        errorDiv.textContent = response.message || 'Invalid Employee ID';
+        errorDiv.classList.remove('hidden');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Enter';
+      }
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('employeeIdInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          handleLogin();
+        }
+      });
+    });
+
+    // ========================================================================
+    // PRODUCT LOADING
+    // ========================================================================
+    async function loadProducts() {
+      console.log('Loading products...');
+      const response = await callApi('getProducts', {});
+      
+      console.log('Products API response:', response);
+      
+      if (response.success) {
+        allProducts = response.products;
+        console.log('Products loaded:', allProducts.length, 'products');
+        console.log('First product:', allProducts[0]);
+        
+        // Extract unique categories
+        categories = [...new Set(allProducts.map(p => p.category))];
+        console.log('Categories:', categories);
+        
+        renderCategoryTabs();
+        renderProducts();
+      } else {
+        console.error('Failed to load products:', response.message);
+        document.getElementById('productGrid').innerHTML = 
+          '<div class="empty-state"><h3>Error loading products</h3><p>Please refresh the page</p></div>';
+      }
+    }
+
+    // ========================================================================
+    // CATEGORY TABS
+    // ========================================================================
+    function renderCategoryTabs() {
+      const tabsContainer = document.getElementById('categoryTabs');
+      let tabsHtml = '<button class="category-tab active" onclick="filterCategory(\'all\')">All Items</button>';
+      
+      categories.forEach(cat => {
+        tabsHtml += `<button class="category-tab" onclick="filterCategory('${cat}')">${cat}</button>`;
+      });
+      
+      tabsContainer.innerHTML = tabsHtml;
+    }
+
+    function filterCategory(category) {
+      currentCategory = category;
+      
+      // Update active tab
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if ((category === 'all' && tab.textContent === 'All Items') || 
+            tab.textContent === category) {
+          tab.classList.add('active');
+        }
+      });
+      
+      renderProducts();
+    }
+
+    // ========================================================================
+    // PRODUCT RENDERING
+    // ========================================================================
+    function renderProducts() {
+      const productGrid = document.getElementById('productGrid');
+      const filteredProducts = currentCategory === 'all' 
+        ? allProducts 
+        : allProducts.filter(p => p.category === currentCategory);
+
+      if (filteredProducts.length === 0) {
+        productGrid.innerHTML = '<div class="empty-state"><h3>No products in this category</h3></div>';
+        return;
+      }
+
+      let html = '';
+      filteredProducts.forEach(product => {
+        const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
+        const sizeSelectId = `size-${product.id}`;
+        // Determine label based on category
+        const selectorLabel = product.category === 'Outerwear' ? 'Select Size:' : 'Select Color:';
+        
+        html += `
+          <div class="product-card">
+            <img src="${product.imageUrl}" alt="${product.name}" class="product-image" 
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22220%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22280%22 height=%22220%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+            <div class="product-info">
+              <div class="product-name">${product.name}</div>
+              <div class="product-description-wrapper">
+                <div id="desc-${product.id}" class="product-description">${product.description}</div>
+              </div>
+              <button id="toggle-${product.id}" class="read-more-btn hidden" onclick="toggleDescription('${product.id}')">Read more</button>
+              ${hasSizes ? `
+                <div class="size-selector">
+                  <label for="${sizeSelectId}">Select Size/Color:</label>
+                  <select id="${sizeSelectId}">
+                    ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
+                  </select>
+                </div>
+              ` : '<div style="flex: 1;"></div>'}
+              <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      productGrid.innerHTML = html;
+      
+      // Check which descriptions need the "Read more" button
+      checkDescriptionOverflow();
+    }
+
+    // ========================================================================
+    // DESCRIPTION EXPANSION
+    // ========================================================================
+    function checkDescriptionOverflow() {
+      allProducts.forEach(product => {
+        const descElement = document.getElementById(`desc-${product.id}`);
+        const toggleBtn = document.getElementById(`toggle-${product.id}`);
+        
+        if (descElement && toggleBtn) {
+          // Check if content overflows the 165px height
+          if (descElement.scrollHeight > 165) {
+            toggleBtn.classList.remove('hidden');
+          }
+        }
+      });
+    }
+
+    function toggleDescription(productId) {
+      const desc = document.getElementById(`desc-${productId}`);
+      const btn = document.getElementById(`toggle-${productId}`);
+      
+      if (desc.classList.contains('expanded')) {
+        desc.classList.remove('expanded');
+        btn.textContent = 'Read more';
+      } else {
+        desc.classList.add('expanded');
+        btn.textContent = 'Read less';
+      }
+    }
+
+    // ========================================================================
+    // CART MANAGEMENT
+    // ========================================================================
+    function addToCart(productId) {
+      const product = allProducts.find(p => p.id === productId);
+      if (!product) return;
+
+      let selectedSize = '';
+      if (product.sizeOptions && product.sizeOptions.length > 0) {
+        const sizeSelect = document.getElementById(`size-${productId}`);
+        selectedSize = sizeSelect.value;
+      }
+
+      // Only allow one item in cart
+      cart = [{
+        product: product,
+        selectedSize: selectedSize
+      }];
+
+      updateCartCount();
+      viewCart();
+    }
+
+    function updateCartCount() {
+      const cartCount = document.getElementById('cartCount');
+      if (cart.length > 0) {
+        cartCount.textContent = cart.length;
+        cartCount.classList.remove('hidden');
+      } else {
+        cartCount.classList.add('hidden');
+      }
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCartCount();
+      renderCart();
+      
+      if (cart.length === 0) {
+        backToCatalog();
+      }
+    }
+
+    function viewCart() {
+      document.getElementById('productGrid').classList.add('hidden');
+      document.getElementById('categoryTabs').classList.add('hidden');
+      document.getElementById('heroSection').classList.add('hidden');
+      document.getElementById('cartView').classList.remove('hidden');
+      renderCart();
+    }
+
+    function renderCart() {
+      const cartItems = document.getElementById('cartItems');
+      
+      if (cart.length === 0) {
+        cartItems.innerHTML = '<div class="empty-state"><h3>Your cart is empty</h3><p>Add a gift to continue</p></div>';
+        return;
+      }
+
+      let html = '';
+      cart.forEach((item, index) => {
+        const sizeLabel = item.product.category === 'Outerwear' ? 'Size' : 'Color';
+        html += `
+          <div class="cart-item">
+            <img src="${item.product.imageUrl}" alt="${item.product.name}" class="cart-item-image">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${item.product.name}</div>
+              ${item.selectedSize ? `<div class="cart-item-size">${sizeLabel}: ${item.selectedSize}</div>` : ''}
+            </div>
+            <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
+          </div>
+        `;
+      });
+
+      cartItems.innerHTML = html;
+    }
+
+    function backToCatalog() {
+      document.getElementById('cartView').classList.add('hidden');
+      document.getElementById('productGrid').classList.remove('hidden');
+      document.getElementById('categoryTabs').classList.remove('hidden');
+      document.getElementById('heroSection').classList.remove('hidden');
+    }
+
+    // ========================================================================
+    // CHECKOUT
+    // ========================================================================
+    function goToCheckout() {
+      if (cart.length === 0) return;
+
+      document.getElementById('cartView').classList.add('hidden');
+      document.getElementById('checkoutView').classList.remove('hidden');
+      
+      // Reset button state
+      const placeOrderBtn = document.querySelector('.place-order-btn');
+      if (placeOrderBtn) {
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Place Order';
+      }
+      
+      // Clear error messages
+      const errorDiv = document.getElementById('checkoutError');
+      if (errorDiv) {
+        errorDiv.classList.add('hidden');
+        errorDiv.textContent = '';
+      }
+      
+      // Pre-fill employee name
+      document.getElementById('confirmName').value = currentEmployee.name;
+      
+      // Render checkout summary
+      const summaryDiv = document.getElementById('checkoutSummary');
+      const item = cart[0];
+      const sizeLabel = item.product.category === 'Outerwear' ? 'Size' : 'Color';
+      summaryDiv.innerHTML = `
+        <div class="summary-item">
+          <span>Product:</span>
+          <strong>${item.product.name}</strong>
+        </div>
+        ${item.selectedSize ? `
+          <div class="summary-item">
+            <span>${sizeLabel}:</span>
+            <strong>${item.selectedSize}</strong>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function backToCart() {
+      document.getElementById('checkoutView').classList.add('hidden');
+      document.getElementById('cartView').classList.remove('hidden');
+    }
+
+    async function placeOrder() {
+      console.log('=== PLACE ORDER CLICKED ===');
+      
+      const confirmName = document.getElementById('confirmName').value.trim();
+      const errorDiv = document.getElementById('checkoutError');
+      
+      if (!confirmName) {
+        errorDiv.textContent = 'Please confirm your name';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      if (cart.length === 0) {
+        errorDiv.textContent = 'Your cart is empty';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      const placeOrderBtn = document.querySelector('.place-order-btn');
+      placeOrderBtn.disabled = true;
+      placeOrderBtn.textContent = 'Placing Order...';
+      errorDiv.classList.add('hidden');
+
+      // Capture cart item data
+      const item = cart[0];
+      const orderData = {
+        productId: item.product.id,
+        productName: item.product.name,
+        selectedSize: item.selectedSize || '',
+        category: item.product.category
+      };
+      
+      console.log('Submitting order:', orderData);
+      
+      const response = await callApi('submitOrder', {
+        employeeId: currentEmployee.id,
+        productId: orderData.productId,
+        selectedSize: orderData.selectedSize
+      });
+
+      if (response.success) {
+        console.log('✅ Order successful');
+        
+        // Hide checkout view
+        document.getElementById('checkoutView').classList.add('hidden');
+        
+        // Show confirmation view
+        document.getElementById('confirmationView').classList.remove('hidden');
+        
+        // Update confirmation message
+        document.getElementById('confirmationMessage').textContent = response.message;
+        
+        // Build confirmation details
+        const sizeLabel = orderData.category === 'Outerwear' ? 'Size' : 'Color';
+        let detailsHtml = `
+          <div class="summary-item">
+            <span>Product:</span>
+            <strong>${orderData.productName}</strong>
+          </div>
+        `;
+        
+        if (orderData.selectedSize) {
+          detailsHtml += `
+            <div class="summary-item">
+              <span>${sizeLabel}:</span>
+              <strong>${orderData.selectedSize}</strong>
+            </div>
+          `;
+        }
+        
+        detailsHtml += `
+          <div class="summary-item">
+            <span>Order Date:</span>
+            <strong>${new Date().toLocaleDateString()}</strong>
+          </div>
+        `;
+        
+        document.getElementById('confirmationDetails').innerHTML = detailsHtml;
+        
+        // Update employee state
+        currentEmployee.hasOrdered = true;
+        currentEmployee.existingOrder = {
+          productId: orderData.productId,
+          productName: orderData.productName,
+          selectedOptions: orderData.selectedSize,
+          category: orderData.category
+        };
+        
+        // Clear cart
+        cart = [];
+        updateCartCount();
+        
+      } else {
+        console.error('❌ Order failed:', response.message);
+        
+        errorDiv.textContent = response.message || 'Error placing order';
+        errorDiv.classList.remove('hidden');
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Place Order';
+      }
+    }
+
+    // ========================================================================
+    // EXISTING ORDER / MODIFICATION
+    // ========================================================================
+    function showExistingOrder() {
+      document.getElementById('heroSection').classList.add('hidden');
+      document.getElementById('categoryTabs').classList.add('hidden');
+      document.getElementById('productGrid').classList.add('hidden');
+      document.getElementById('confirmationView').classList.remove('hidden');
+      
+      const existingOrder = currentEmployee.existingOrder;
+      document.getElementById('confirmationMessage').textContent = 
+        'You have already placed your order. You can modify it below if needed.';
+      
+    // Look up the product to get its category
+      const product = allProducts.find(p => p.id === existingOrder.productId);
+      const sizeLabel = product && product.category === 'Outerwear' ? 'Size' : 'Color';
+
+      document.getElementById('confirmationDetails').innerHTML = `
+        <div class="summary-item">
+          <span>Current Selection:</span>
+          <strong>${existingOrder.productName}</strong>
+        </div>
+        ${existingOrder.selectedOptions ? `
+          <div class="summary-item">
+            <span>Size:</span>
+            <strong>${existingOrder.selectedOptions}</strong>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function modifyOrder() {
+      document.getElementById('confirmationView').classList.add('hidden');
+      document.getElementById('heroSection').classList.remove('hidden');
+      document.getElementById('categoryTabs').classList.remove('hidden');
+      document.getElementById('productGrid').classList.remove('hidden');
+      loadProducts();
+    }
+  </script>
+</body>
+</html>
