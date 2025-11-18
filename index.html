@@ -17,6 +17,8 @@
     - Added fade effect for truncated descriptions
     - Fixed spacing and layout issues
     - Made gradient background fixed/sticky
+    - Dynamic selector label: "Select Size" for Outerwear, "Select Color" for others
+    - Mobile: Category buttons replaced with dropdown menu for cleaner UX
   -->
   <style>
     * {
@@ -214,6 +216,21 @@
       background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
       color: white;
       border-color: transparent;
+    }
+
+    /* Category Dropdown (Mobile Only) */
+    .category-dropdown {
+      display: none;
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: white;
+      margin-bottom: 2rem;
+      min-height: 48px;
     }
 
     /* Product Grid */
@@ -689,6 +706,10 @@
         text-align: center;
       }
 
+      .category-dropdown {
+        display: block;
+      }
+
       .cart-header {
         flex-direction: column;
         align-items: flex-start;
@@ -784,6 +805,10 @@
 
       <!-- Category Tabs -->
       <div id="categoryTabs" class="category-tabs"></div>
+
+      <!-- Category Dropdown (Mobile) -->
+      <select id="categoryDropdown" class="category-dropdown" onchange="filterCategoryFromDropdown()">
+      </select>
 
       <!-- Product Grid -->
       <div id="productGrid" class="product-grid"></div>
@@ -984,6 +1009,9 @@
     // ========================================================================
     function renderCategoryTabs() {
       const tabsContainer = document.getElementById('categoryTabs');
+      const dropdown = document.getElementById('categoryDropdown');
+
+    // Render Tabs
       let tabsHtml = '<button class="category-tab active" onclick="filterCategory(\'all\')">All Items</button>';
       
       categories.forEach(cat => {
@@ -991,8 +1019,20 @@
       });
       
       tabsContainer.innerHTML = tabsHtml;
-    }
 
+      // Render dropdown
+      let dropdownHtml = '<option value="all">All Items</option>';
+      categories.forEach(cat => {
+        dropdownHtml += `<option value="${cat}">${cat}</option>`;
+      });
+      dropdown.innerHTML = dropdownHtml;
+    }
+    
+    function filterCategoryFromDropdown() {
+      const dropdown = document.getElementById('categoryDropdown');
+      filterCategory(dropdown.value);
+    }
+    
     function filterCategory(category) {
       currentCategory = category;
       
@@ -1004,6 +1044,10 @@
           tab.classList.add('active');
         }
       });
+      
+      // Update dropdown
+      const dropdown = document.getElementById('categoryDropdown');
+      dropdown.value = category;
       
       renderProducts();
     }
@@ -1137,6 +1181,7 @@
     function viewCart() {
       document.getElementById('productGrid').classList.add('hidden');
       document.getElementById('categoryTabs').classList.add('hidden');
+      document.getElementById('categoryDropdown').classList.add('hidden');
       document.getElementById('heroSection').classList.add('hidden');
       document.getElementById('cartView').classList.remove('hidden');
       renderCart();
@@ -1171,6 +1216,7 @@
     function backToCatalog() {
       document.getElementById('cartView').classList.add('hidden');
       document.getElementById('productGrid').classList.remove('hidden');
+      document.getElementById('categoryDropdown').classList.remove('hidden');
       document.getElementById('categoryTabs').classList.remove('hidden');
       document.getElementById('heroSection').classList.remove('hidden');
     }
@@ -1332,6 +1378,7 @@
     function showExistingOrder() {
       document.getElementById('heroSection').classList.add('hidden');
       document.getElementById('categoryTabs').classList.add('hidden');
+      document.getElementById('categoryDropdown').classList.add('hidden');
       document.getElementById('productGrid').classList.add('hidden');
       document.getElementById('confirmationView').classList.remove('hidden');
       
@@ -1361,6 +1408,7 @@
       document.getElementById('confirmationView').classList.add('hidden');
       document.getElementById('heroSection').classList.remove('hidden');
       document.getElementById('categoryTabs').classList.remove('hidden');
+      document.getElementById('categoryDropdown').classList.remove('hidden');
       document.getElementById('productGrid').classList.remove('hidden');
       loadProducts();
     }
