@@ -6,7 +6,7 @@
   <title>Employee Gift Portal - Plews & Edelmann</title>
   <!--
     Employee Gift Portal Frontend - AWS Amplify Version
-    Version: 2.1.8 - 2024-11-17
+    Version: 2.1.9 - 2024-11-17
     
     DEPLOYMENT: Host on AWS Amplify as static site
     Update API_BASE_URL with your Apps Script deployment URL
@@ -760,7 +760,7 @@
       <p style="margin-top: 1.5rem; font-size: 0.9rem;">
         For assistance, reach out at<br>
         <strong><a href="mailto:hr@plews.com">hr@plews.com</a></strong><br><br>
-        Version 2.1.8 - AWS Amplify
+        Version 2.1.9 - AWS Amplify
       </p>
     </div>
   </div>
@@ -1026,6 +1026,8 @@
       filteredProducts.forEach(product => {
         const hasSizes = product.sizeOptions && product.sizeOptions.length > 0;
         const sizeSelectId = `size-${product.id}`;
+        // Determine label based on category
+        const selectorLabel = product.category === 'Outerwear' ? 'Select Size:' : 'Select Color:';
         
         html += `
           <div class="product-card">
@@ -1150,12 +1152,13 @@
 
       let html = '';
       cart.forEach((item, index) => {
+        const sizeLabel = item.product.category === 'Outerwear' ? 'Size' : 'Color';
         html += `
           <div class="cart-item">
             <img src="${item.product.imageUrl}" alt="${item.product.name}" class="cart-item-image">
             <div class="cart-item-info">
               <div class="cart-item-name">${item.product.name}</div>
-              ${item.selectedSize ? `<div class="cart-item-size">Size: ${item.selectedSize}</div>` : ''}
+              ${item.selectedSize ? `<div class="cart-item-size">${sizeLabel}: ${item.selectedSize}</div>` : ''}
             </div>
             <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
           </div>
@@ -1201,6 +1204,7 @@
       // Render checkout summary
       const summaryDiv = document.getElementById('checkoutSummary');
       const item = cart[0];
+      const sizeLabel = item.product.category === 'Outerwear' ? 'Size' : 'Color';
       summaryDiv.innerHTML = `
         <div class="summary-item">
           <span>Product:</span>
@@ -1208,7 +1212,7 @@
         </div>
         ${item.selectedSize ? `
           <div class="summary-item">
-            <span>Size:</span>
+            <span>${sizeLabel}:</span>
             <strong>${item.selectedSize}</strong>
           </div>
         ` : ''}
@@ -1248,7 +1252,8 @@
       const orderData = {
         productId: item.product.id,
         productName: item.product.name,
-        selectedSize: item.selectedSize || ''
+        selectedSize: item.selectedSize || '',
+        category: item.product.category
       };
       
       console.log('Submitting order:', orderData);
@@ -1272,6 +1277,7 @@
         document.getElementById('confirmationMessage').textContent = response.message;
         
         // Build confirmation details
+        const sizeLabel = orderData.category === 'Outerwear' ? 'Size' : 'Color';
         let detailsHtml = `
           <div class="summary-item">
             <span>Product:</span>
@@ -1282,7 +1288,7 @@
         if (orderData.selectedSize) {
           detailsHtml += `
             <div class="summary-item">
-              <span>Size:</span>
+              <span>${sizeLabel}:</span>
               <strong>${orderData.selectedSize}</strong>
             </div>
           `;
@@ -1302,7 +1308,8 @@
         currentEmployee.existingOrder = {
           productId: orderData.productId,
           productName: orderData.productName,
-          selectedOptions: orderData.selectedSize
+          selectedOptions: orderData.selectedSize,
+          category: orderData.category
         };
         
         // Clear cart
@@ -1332,6 +1339,10 @@
       document.getElementById('confirmationMessage').textContent = 
         'You have already placed your order. You can modify it below if needed.';
       
+    // Look up the product to get its category
+      const product = allProducts.find(p => p.id === existingOrder.productId);
+      const sizeLabel = product && product.category === 'Outerwear' ? 'Size' : 'Color';
+
       document.getElementById('confirmationDetails').innerHTML = `
         <div class="summary-item">
           <span>Current Selection:</span>
