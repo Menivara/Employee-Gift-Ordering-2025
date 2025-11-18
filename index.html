@@ -1041,7 +1041,7 @@
               <button id="toggle-${product.id}" class="read-more-btn hidden" onclick="toggleDescription('${product.id}')">Read more</button>
               ${hasSizes ? `
                 <div class="size-selector">
-                  <label for="${sizeSelectId}">Select Size/Color:</label>
+                  <label for="${sizeSelectId}">${selectorLabel}</label>
                   <select id="${sizeSelectId}">
                     ${product.sizeOptions.map(size => `<option value="${size}">${size}</option>`).join('')}
                   </select>
